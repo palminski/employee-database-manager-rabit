@@ -2,6 +2,7 @@
 const mysql = require('mysql2');
 const inquirer = require('inquirer');
 const password = require('./passwords/password');
+const cTable = require('console.table');
 
 const db = mysql.createConnection(
     {
@@ -95,7 +96,7 @@ const initialChoice = function(){
     })
 }
 
-initialChoice()
+initialChoice();
 
 // displayEmployees();
 // displayRoles();
