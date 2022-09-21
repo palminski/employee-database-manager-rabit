@@ -13,7 +13,7 @@ const db = mysql.createConnection(
 );
 
 const displayEmployees = function() {
-    const sql = `SELECT e.first_name,e.last_name, 
+    const sql = `SELECT e.id, e.first_name,e.last_name, 
                 roles.title AS title,
                 roles.salary,
                 departments.name AS department,
@@ -39,10 +39,15 @@ const displayEmployees = function() {
 };
 
 const displayRoles = function() {
-    const sql = `SELECT * FROM roles`;
+    const sql = `SELECT roles.id, roles.title, roles.salary,
+                departments.name AS department
+                FROM roles 
+                LEFT JOIN departments
+                ON roles.department_id = departments.id`;
     db.query(sql, (err, rows) => {
         if (err) {
             console.log('An Error has Occured');
+            console.log(err.message);
             return;
         }
         console.table(rows);
