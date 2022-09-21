@@ -13,10 +13,18 @@ const db = mysql.createConnection(
 );
 
 const displayEmployees = function() {
-    const sql = `SELECT * FROM employees`;
+    const sql = `SELECT employees.*, 
+                roles.title AS title,
+                departments.name AS department
+                FROM employees
+                LEFT JOIN roles
+                ON employees.role_id = roles.id
+                LEFT JOIN departments
+                ON roles.department_id = departments.id`;
     db.query(sql, (err, rows) => {
         if (err) {
             console.log('An Error has Occured');
+            console.log(err.message);
             return;
         }
         console.table(rows);
