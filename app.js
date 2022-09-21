@@ -1,5 +1,6 @@
 //dependancies
 const mysql = require('mysql2');
+const inquirer = require('inquirer');
 const password = require('./passwords/password');
 
 const db = mysql.createConnection(
@@ -12,6 +13,7 @@ const db = mysql.createConnection(
     console.log('connected to database')
 );
 
+//FUNCTIONS TO DISPLAY DATA
 const displayEmployees = function() {
     const sql = `SELECT e.id, e.first_name,e.last_name, 
                 roles.title AS title,
@@ -65,6 +67,36 @@ const displayDepartments = function() {
     });
 };
 
-displayEmployees();
-displayRoles();
-displayDepartments();
+//PROMPT USER
+const initialChoice = function(){
+    inquirer.prompt(
+        [
+            {
+                name: 'choice',
+                type: "list",
+                message: "What would you like to do?",
+                choices: ['View Employees',
+                        "View Roles",
+                        "View Departments"] 
+            }
+        ]
+    )
+    .then((answers) => {
+        console.log(answers);
+        if (answers.choice === 'View Employees'){
+            displayEmployees();
+        }
+        else if (answers.choice === 'View Roles'){
+            displayRoles();
+        }
+        else if (answers.choice === 'View Departments'){
+            displayDepartments();
+        }
+    })
+}
+
+initialChoice()
+
+// displayEmployees();
+// displayRoles();
+// displayDepartments();
