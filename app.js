@@ -1,20 +1,16 @@
 //dependancies
-const mysql = require('mysql2');
+
 const inquirer = require('inquirer');
-const password = require('./passwords/password');
+
 const cTable = require('console.table');
 
-const db = mysql.createConnection(
-    {
-        host: 'localhost',
-        user: 'root',
-        password: password,
-        database: 'company'
-    },
-    console.log('connected to database')
-);
+const db = require('./db/connections.js');
+
+const validateInput = require('./utils/validate-input.js');
 
 //FUNCTIONS TO DISPLAY DATA
+//<><><><><><><><><><><><><><>
+//EMLOYEES
 const displayEmployees = function() {
     const sql = `SELECT e.id, e.first_name,e.last_name, 
                 roles.title AS title,
@@ -38,17 +34,8 @@ const displayEmployees = function() {
     .then(prompUser)
     .catch(console.log());
         
-        
-    //     , (err, rows) => {
-    //     if (err) {
-    //         console.log('An Error has Occured');
-    //         console.log(err.message);
-    //         return;
-    //     }
-    //     console.table(rows);
-    // });
 };
-
+//ROLES
 const displayRoles = function() {
     const sql = `SELECT roles.id, roles.title, roles.salary,
                 departments.name AS department
@@ -62,7 +49,7 @@ const displayRoles = function() {
         .then(prompUser)
         .catch(console.log());
 };
-
+//DEPARTMENTS
 const displayDepartments = function () {
     const sql = `SELECT * FROM departments`;
     db.promise().query(sql)
@@ -72,6 +59,34 @@ const displayDepartments = function () {
         .then(prompUser)
         .catch(console.log());
 };
+
+//FUNCTIONS TO ADD DATA
+//<><><><><><><><><><><><><>
+//ROLE
+
+
+//DEPARTMENT
+const addDepartment = function() {
+    inquirer.prompt(
+        [
+            {
+                name: 'departmentName',
+                type: 'input',
+                message: 'Please Enter Name of Department to add',
+                validate: validateInput
+            }
+        ]
+    )
+    .then(answer => {
+        newDepartment = (answer.departmentName.trim());
+        const sql = `INSERT INTO departments (name)
+                    VALUES (?)`;
+        const params = [newDepartment];
+        db.promise().query(sql, params)
+        .then(console.log('Success! Department Added!'))
+        .then(prompUser)
+    });
+}
 
 //PROMPT USER
 const prompUser = function(){
@@ -83,7 +98,8 @@ const prompUser = function(){
                 message: "What would you like to do?",
                 choices: ['View Employees',
                         "View Roles",
-                        "View Departments"] 
+                        "View Departments",
+                        'Add Department'] 
             }
         ]
     )
@@ -97,6 +113,9 @@ const prompUser = function(){
         }
         else if (answers.choice === 'View Departments'){
             displayDepartments();
+        }  
+        else if (answers.choice === 'Add Department'){
+            addDepartment();
         }  
     })
 }
