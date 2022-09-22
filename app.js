@@ -31,14 +31,22 @@ const displayEmployees = function() {
                 `;
 
 
-    db.query(sql, (err, rows) => {
-        if (err) {
-            console.log('An Error has Occured');
-            console.log(err.message);
-            return;
-        }
+    db.promise().query(sql)
+    .then( ([rows,fields]) => {
         console.table(rows);
-    });
+    })
+    .then(prompUser)
+    .catch(console.log());
+        
+        
+    //     , (err, rows) => {
+    //     if (err) {
+    //         console.log('An Error has Occured');
+    //         console.log(err.message);
+    //         return;
+    //     }
+    //     console.table(rows);
+    // });
 };
 
 const displayRoles = function() {
@@ -47,29 +55,26 @@ const displayRoles = function() {
                 FROM roles 
                 LEFT JOIN departments
                 ON roles.department_id = departments.id`;
-    db.query(sql, (err, rows) => {
-        if (err) {
-            console.log('An Error has Occured');
-            console.log(err.message);
-            return;
-        }
-        console.table(rows);
-    });
+    db.promise().query(sql)
+        .then(([rows, fields]) => {
+            console.table(rows);
+        })
+        .then(prompUser)
+        .catch(console.log());
 };
 
-const displayDepartments = function() {
+const displayDepartments = function () {
     const sql = `SELECT * FROM departments`;
-    db.query(sql, (err, rows) => {
-        if (err) {
-            console.log('An Error has Occured');
-            return;
-        }
-        console.table(rows);
-    });
+    db.promise().query(sql)
+        .then(([rows, fields]) => {
+            console.table(rows);
+        })
+        .then(prompUser)
+        .catch(console.log());
 };
 
 //PROMPT USER
-const initialChoice = function(){
+const prompUser = function(){
     inquirer.prompt(
         [
             {
@@ -83,7 +88,7 @@ const initialChoice = function(){
         ]
     )
     .then((answers) => {
-        console.log(answers);
+        
         if (answers.choice === 'View Employees'){
             displayEmployees();
         }
@@ -92,12 +97,14 @@ const initialChoice = function(){
         }
         else if (answers.choice === 'View Departments'){
             displayDepartments();
-        }
+        }  
     })
 }
 
-initialChoice();
+prompUser();
 
 // displayEmployees();
+
 // displayRoles();
 // displayDepartments();
+// console.log("hello world");
