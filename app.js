@@ -8,6 +8,7 @@ const db = require('./db/connections.js');
 
 const validateInput = require('./utils/validate-input.js');
 
+
 //FUNCTIONS TO DISPLAY DATA
 //<><><><><><><><><><><><><><>
 //EMLOYEES
@@ -62,8 +63,69 @@ const displayDepartments = function () {
 
 //FUNCTIONS TO ADD DATA
 //<><><><><><><><><><><><><>
+//EMPLOYEE
+const addEmployee = function(rolesArray, managersArray) {
+    inquirer.prompt(
+        [
+            {
+                name: 'roleName',
+                type: 'input',
+                message: 'Please Enter Name of role to add',
+                validate: validateInput
+            },
+            {
+                name: 'salary',
+                type: 'input',
+                message: "Please Enter Role's Salary",
+                validate: validateInput
+            },
+            {
+                name: 'role',
+                type: "list",
+                message: "What would you like to do?",
+                choices: rolesArray
+            },
+            {
+                name: 'manager',
+                type: "list",
+                message: "What would you like to do?",
+                choices: managersArray
+            }
+        ]
+    )
+    .then(answers => {
+        console.log(answers);
+    });
+}
 //ROLE
+const addRole = function(departmentsArray) {
 
+    inquirer.prompt(
+        [
+            {
+                name: 'roleName',
+                type: 'input',
+                message: 'Please Enter Name of role to add',
+                validate: validateInput
+            },
+            {
+                name: 'salary',
+                type: 'input',
+                message: "Please Enter Role's Salary",
+                validate: validateInput
+            },
+            {
+                name: 'choice',
+                type: "list",
+                message: "What would you like to do?",
+                choices: departmentsArray
+            }
+        ]
+    )
+    .then(answers => {
+        console.log(answers);
+    });
+}
 
 //DEPARTMENT
 const addDepartment = function() {
@@ -99,6 +161,8 @@ const prompUser = function(){
                 choices: ['View Employees',
                         "View Roles",
                         "View Departments",
+                        'Add Employee',
+                        'Add Role',
                         'Add Department'] 
             }
         ]
@@ -117,13 +181,34 @@ const prompUser = function(){
         else if (answers.choice === 'Add Department'){
             addDepartment();
         }  
+        else if (answers.choice === 'Add Role'){
+            let departmentsArray = [];
+
+            db.promise().query(`SELECT name FROM departments`)
+            .then(([rows, fields]) => {
+                
+                for (let i=0; i < rows.length; i++){
+                    departmentsArray.push(rows[i].name);
+                }
+                return departmentsArray;
+            })
+            .then(departmentsArray => addRole(departmentsArray));
+        }  
+        else if (answers.choice === 'Add Employee'){
+            let rolesArray = [];
+            let managersArray = ["test"];
+
+            db.promise().query(`SELECT title FROM roles`)
+            .then(([rows, fields]) => {
+                
+                for (let i=0; i < rows.length; i++){
+                    rolesArray.push(rows[i].title);
+                }
+                return rolesArray;
+            })
+            .then(rolesArray => addRole(rolesArray,managersArray));
+        }  
     })
 }
 
 prompUser();
-
-// displayEmployees();
-
-// displayRoles();
-// displayDepartments();
-// console.log("hello world");
