@@ -6,7 +6,7 @@ const cTable = require('console.table');
 
 const db = require('./db/connections.js');
 
-const validateInput = require('./utils/validate-input.js');
+const { validateInput, validateNumber }= require('./utils/validate-input.js');
 
 
 //FUNCTIONS TO DISPLAY DATA
@@ -131,7 +131,7 @@ const addRole = function(departmentsArray) {
                 name: 'salary',
                 type: 'input',
                 message: "Please Enter Role's Salary",
-                validate: validateInput
+                validate: validateNumber
             },
             {
                 name: 'department',

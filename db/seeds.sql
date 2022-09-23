@@ -6,10 +6,10 @@ INSERT INTO departments(name)
 
 INSERT INTO roles(title,salary,department_id)
     VALUES
-    ('CEO',999999999,1),
+    ('CEO',99999,1),
     ('Bean Counter',100.5,2),
     ('Executive Bean Counter',101,2),
-    ('nerd',69,3),
+    ('nerd',70,3),
     ('chief nerd',66.99,3),
     ('Toadie',5,3);
 
