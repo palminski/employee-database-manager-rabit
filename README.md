@@ -2,7 +2,7 @@
 
 ## Description
 A comand line application for storing and recieving information from an sql database.
-A video of the application in action can be seen [here]().
+A video of the application in action can be seen [here](https://drive.google.com/file/d/14Dfxtap2Ji705srtPtor9xtGtvN1Az0z/view).
 
 ## Table of Contents
 [Installation](#installation)
