@@ -68,35 +68,38 @@ const addEmployee = function(rolesArray, managersArray) {
     inquirer.prompt(
         [
             {
-                name: 'roleName',
+                name: 'firstName',
                 type: 'input',
-                message: 'Please Enter Name of role to add',
+                message: "Please Enter Employee's first name",
                 validate: validateInput
             },
             {
-                name: 'salary',
+                name: 'lastName',
                 type: 'input',
-                message: "Please Enter Role's Salary",
+                message: "Please Enter Employee's last name",
                 validate: validateInput
             },
             {
                 name: 'role',
                 type: "list",
-                message: "What would you like to do?",
+                message: "What is this employee's role?",
                 choices: rolesArray
             },
             {
                 name: 'manager',
                 type: "list",
-                message: "What would you like to do?",
+                message: "Who is this employees manager?",
                 choices: managersArray
             }
         ]
     )
     .then(answers => {
         console.log(answers);
+        console.log('------------------------------');
+        prompUser();
     });
 }
+
 //ROLE
 const addRole = function(departmentsArray) {
 
@@ -117,13 +120,15 @@ const addRole = function(departmentsArray) {
             {
                 name: 'choice',
                 type: "list",
-                message: "What would you like to do?",
+                message: "What Department doe this role belong to?",
                 choices: departmentsArray
             }
         ]
     )
     .then(answers => {
         console.log(answers);
+        console.log('------------------------------');
+        prompUser();
     });
 }
 
@@ -145,10 +150,41 @@ const addDepartment = function() {
                     VALUES (?)`;
         const params = [newDepartment];
         db.promise().query(sql, params)
-        .then(console.log('Success! Department Added!'))
-        .then(prompUser)
+        .then( answers => {
+            console.log("Department Added!");
+            console.log('------------------------------');
+            prompUser();
+        })
     });
 }
+//FUNCTIONS TO UPDATE DATA
+//<><><><><><><><><><><><><>
+//UPDATE EMPLOYEES ROLE
+const updateEmployeeRole = function(employeesArray,rolesArray){
+    inquirer.prompt(
+        [
+            {
+                name: 'employee',
+                type: 'list',
+                message: 'Choose name of employee to update',
+                choices: employeesArray
+            },
+            {
+                name: 'newRole',
+                type: 'list',
+                message: 'Choose new role',
+                choices: rolesArray
+            }
+        ]
+    )
+    .then(answers => {
+        console.log(answers);
+        console.log('------------------------------');
+        prompUser();
+    })
+}
+
+
 
 //PROMPT USER
 const prompUser = function(){
@@ -163,7 +199,8 @@ const prompUser = function(){
                         "View Departments",
                         'Add Employee',
                         'Add Role',
-                        'Add Department'] 
+                        'Add Department',
+                        'Update Employee'] 
             }
         ]
     )
@@ -196,7 +233,7 @@ const prompUser = function(){
         }  
         else if (answers.choice === 'Add Employee'){
             let rolesArray = [];
-            let managersArray = ["test"];
+            let managersArray = ["None"];
 
             db.promise().query(`SELECT title FROM roles`)
             .then(([rows, fields]) => {
@@ -206,7 +243,34 @@ const prompUser = function(){
                 }
                 return rolesArray;
             })
-            .then(rolesArray => addRole(rolesArray,managersArray));
+            .then(db.promise().query(`SELECT first_name FROM employees`)
+            .then(([rows, fields]) => {
+                for (let i=0; i < rows.length; i++){
+                    managersArray.push(rows[i].first_name);
+                }
+                return managersArray;
+            })
+            )
+            .then(rolesArray => addEmployee(rolesArray,managersArray));
+        }
+        else if (answers.choice === 'Update Employee') {
+            let employeesArray = [];
+            let rolesArray =[];
+            db.promise().query('SELECT first_name FROM employees')
+            .then(([rows, fields]) => {
+                for (let i=0; i < rows.length; i++){
+                    employeesArray.push(rows[i].first_name);
+                }
+                return employeesArray;
+            })
+            .then(db.promise().query(`SELECT title FROM roles`)
+            .then(([rows, fields]) => {
+                for (let i=0; i < rows.length; i++){
+                    rolesArray.push(rows[i].title);
+                }
+            }))
+            .then(employeesArray => updateEmployeeRole(employeesArray,rolesArray))
+            
         }  
     })
 }
