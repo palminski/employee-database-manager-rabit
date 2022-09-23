@@ -30,6 +30,7 @@ const displayEmployees = function() {
 
     db.promise().query(sql)
     .then( ([rows,fields]) => {
+        console.log('---EMPLOYEES------------------------------\n');
         console.table(rows);
     })
     .then(prompUser)
@@ -45,6 +46,8 @@ const displayRoles = function() {
                 ON roles.department_id = departments.id`;
     db.promise().query(sql)
         .then(([rows, fields]) => {
+            console.log('---ROLES----------------------------------\n');
+
             console.table(rows);
         })
         .then(prompUser)
@@ -55,6 +58,7 @@ const displayDepartments = function () {
     const sql = `SELECT * FROM departments`;
     db.promise().query(sql)
         .then(([rows, fields]) => {
+            console.log('---DEPARTMENTS----------------------------\n');
             console.table(rows);
         })
         .then(prompUser)
@@ -94,9 +98,21 @@ const addEmployee = function(rolesArray, managersArray) {
         ]
     )
     .then(answers => {
-        console.log(answers);
-        console.log('------------------------------');
-        prompUser();
+        newFirstName = (answers.firstName.trim());
+        newLastName = (answers.lastName.trim());
+
+        const sql = `INSERT INTO employees (first_name, last_name, role_id, manager_id)
+                    VALUES (?,?,(SELECT id FROM roles WHERE title = ?),(SELECT id FROM employees AS e WHERE CONCAT(first_name, ' ', last_name) = ?))`;
+        const params = [newFirstName,newLastName,answers.role,answers.manager];
+
+        db.promise().query(sql, params)
+        .then( () => {
+            console.log('------------------------------');
+            console.log("New Employee Added!\n");
+            console.log('------------------------------');
+            prompUser();
+        })
+
     });
 }
 
@@ -106,7 +122,7 @@ const addRole = function(departmentsArray) {
     inquirer.prompt(
         [
             {
-                name: 'roleName',
+                name: 'title',
                 type: 'input',
                 message: 'Please Enter Name of role to add',
                 validate: validateInput
@@ -118,7 +134,7 @@ const addRole = function(departmentsArray) {
                 validate: validateInput
             },
             {
-                name: 'choice',
+                name: 'department',
                 type: "list",
                 message: "What Department doe this role belong to?",
                 choices: departmentsArray
@@ -126,9 +142,19 @@ const addRole = function(departmentsArray) {
         ]
     )
     .then(answers => {
-        console.log(answers);
-        console.log('------------------------------');
-        prompUser();
+        newTitle = (answers.title.trim());
+        newSalary = (answers.salary.trim());
+
+        const sql = `INSERT INTO roles (title, salary, department_id)
+                    VALUES (?,?,(SELECT id FROM departments WHERE name = ?))`;
+        const params = [newTitle, newSalary, answers.department];
+        db.promise().query(sql, params)
+        .then( () => {
+            console.log('------------------------------');
+            console.log("New Role Added!\n");
+            console.log('------------------------------');
+            prompUser();
+        })
     });
 }
 
@@ -151,14 +177,17 @@ const addDepartment = function() {
         const params = [newDepartment];
         db.promise().query(sql, params)
         .then( answers => {
-            console.log("Department Added!");
+            console.log('------------------------------');
+            console.log("Department Added!\n");
             console.log('------------------------------');
             prompUser();
         })
     });
 }
+
 //FUNCTIONS TO UPDATE DATA
 //<><><><><><><><><><><><><>
+
 //UPDATE EMPLOYEES ROLE
 const updateEmployeeRole = function(employeesArray,rolesArray){
     inquirer.prompt(
@@ -170,7 +199,7 @@ const updateEmployeeRole = function(employeesArray,rolesArray){
                 choices: employeesArray
             },
             {
-                name: 'newRole',
+                name: 'role',
                 type: 'list',
                 message: 'Choose new role',
                 choices: rolesArray
@@ -178,9 +207,15 @@ const updateEmployeeRole = function(employeesArray,rolesArray){
         ]
     )
     .then(answers => {
-        console.log(answers);
-        console.log('------------------------------');
-        prompUser();
+        const sql = `UPDATE employees SET role_id = (SELECT id FROM roles WHERE title = ?) WHERE CONCAT(first_name, ' ', last_name) = ?`;
+        const params = [answers.role, answers.employee];
+        db.promise().query(sql, params)
+        .then( () => {
+            console.log('------------------------------');
+            console.log("Employee Role Updated!\n");
+            console.log('------------------------------');
+            prompUser();
+        })
     })
 }
 
@@ -193,14 +228,15 @@ const prompUser = function(){
             {
                 name: 'choice',
                 type: "list",
-                message: "What would you like to do?",
+                message: "What would you like to do?\n",
                 choices: ['View Employees',
                         "View Roles",
                         "View Departments",
                         'Add Employee',
                         'Add Role',
                         'Add Department',
-                        'Update Employee'] 
+                        'Update Employee',
+                        'Exit'] 
             }
         ]
     )
@@ -218,6 +254,7 @@ const prompUser = function(){
         else if (answers.choice === 'Add Department'){
             addDepartment();
         }  
+
         else if (answers.choice === 'Add Role'){
             let departmentsArray = [];
 
@@ -231,6 +268,7 @@ const prompUser = function(){
             })
             .then(departmentsArray => addRole(departmentsArray));
         }  
+
         else if (answers.choice === 'Add Employee'){
             let rolesArray = [];
             let managersArray = ["None"];
@@ -243,23 +281,25 @@ const prompUser = function(){
                 }
                 return rolesArray;
             })
-            .then(db.promise().query(`SELECT first_name FROM employees`)
+            .then(db.promise().query(`SELECT CONCAT(first_name, ' ' , last_name) AS full_name FROM employees`)
             .then(([rows, fields]) => {
                 for (let i=0; i < rows.length; i++){
-                    managersArray.push(rows[i].first_name);
+                    managersArray.push(rows[i].full_name);
                 }
                 return managersArray;
             })
             )
             .then(rolesArray => addEmployee(rolesArray,managersArray));
         }
+
         else if (answers.choice === 'Update Employee') {
             let employeesArray = [];
             let rolesArray =[];
-            db.promise().query('SELECT first_name FROM employees')
+            db.promise().query("SELECT CONCAT(first_name, ' ' , last_name) AS full_name FROM employees")
+            // db.promise().query(`SELECT first_name FROM employees`)
             .then(([rows, fields]) => {
                 for (let i=0; i < rows.length; i++){
-                    employeesArray.push(rows[i].first_name);
+                    employeesArray.push(rows[i].full_name);
                 }
                 return employeesArray;
             })
@@ -270,9 +310,22 @@ const prompUser = function(){
                 }
             }))
             .then(employeesArray => updateEmployeeRole(employeesArray,rolesArray))
-            
         }  
+
+        else {
+            console.log("Bye!");
+            process.exit();
+        }
     })
 }
+console.log(`
 
+
+<><><><><><><><><><><><><><><><><><><><><><><><><>
+
+        EMPLOYEE DATABASE MANAGER
+        
+<><><><><><><><><><><><><><><><><><><><><><><><><>
+
+`)
 prompUser();
