@@ -219,6 +219,37 @@ const updateEmployeeRole = function(employeesArray,rolesArray){
     })
 }
 
+//UPDATE MANAGER WIP
+const updateEmployeeManager = function(employeesArray,managersArray){
+    inquirer.prompt(
+        [
+            {
+                name: 'employee',
+                type: 'list',
+                message: 'Choose name of employee to update',
+                choices: employeesArray
+            },
+            {
+                name: 'manager',
+                type: 'list',
+                message: 'Choose new manager',
+                choices: managersArray
+            }
+        ]
+    )
+    .then(answers => {
+        const sql = `UPDATE employees SET manager_id = (SELECT id FROM employees AS e WHERE CONCAT(first_name, ' ', last_name) = ?) WHERE CONCAT(first_name, ' ', last_name) = ?`;
+        const params = [answers.manager, answers.employee];
+        db.promise().query(sql, params)
+        .then( () => {
+            console.log('------------------------------');
+            console.log("Employee Manager Updated!\n");
+            console.log('------------------------------');
+            prompUser();
+        })
+    })
+}
+
 
 
 //PROMPT USER
@@ -236,6 +267,7 @@ const prompUser = function(){
                         'Add Role',
                         'Add Department',
                         'Update Employee Role',
+                        // 'Update Employee Manager',
                         'Exit'] 
             }
         ]
@@ -311,6 +343,26 @@ const prompUser = function(){
             }))
             .then(employeesArray => updateEmployeeRole(employeesArray,rolesArray))
         }  
+
+        else if (answers.choice === 'Update Employee Manager') {
+            let employeesArray = [];
+            let managersArray =[];
+            db.promise().query("SELECT CONCAT(first_name, ' ' , last_name) AS full_name FROM employees")
+            // db.promise().query(`SELECT first_name FROM employees`)
+            .then(([rows, fields]) => {
+                for (let i=0; i < rows.length; i++){
+                    employeesArray.push(rows[i].full_name);
+                }
+                return employeesArray;
+            })
+            .then(db.promise().query("SELECT CONCAT(first_name, ' ' , last_name) AS full_name FROM employees")
+            .then(([rows, fields]) => {
+                for (let i=0; i < rows.length; i++){
+                    managersArray.push(rows[i].full_name);
+                }
+            }))
+            .then(employeesArray => updateEmployeeManager(employeesArray,managersArray))
+        }
 
         else {
             console.log("Bye!");
