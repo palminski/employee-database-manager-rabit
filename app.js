@@ -250,8 +250,33 @@ const updateEmployeeManager = function(employeesArray,managersArray){
     })
 }
 
+//DELETE DATA
+//Delete Employee
+const deleteEmployee = function(employeesArray) {
+    inquirer.prompt(
+        [
+            {
+                name: 'employee',
+                type: 'list',
+                message: 'Choose name of employee to Delete',
+                choices: employeesArray
+            }
+        ]
+    )
+    .then(answer => {
+        const sql = `DELETE FROM employees WHERE CONCAT(first_name, ' ', last_name) = ?`;
+        const params = [answer.employee];
+        db.promise().query(sql, params)
+        .then( () => {
+            console.log('------------------------------');
+            console.log("Employee Deleted!\n");
+            console.log('------------------------------');
+            prompUser();
+        })
+    })
+};
 
-
+//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 //PROMPT USER
 const prompUser = function(){
     inquirer.prompt(
@@ -268,6 +293,9 @@ const prompUser = function(){
                         'Add Department',
                         'Update Employee Role',
                         // 'Update Employee Manager',
+                        'Delete Employee',
+                        'Delete Role',
+                        'Delete Department',
                         'Exit'] 
             }
         ]
@@ -362,6 +390,19 @@ const prompUser = function(){
                 }
             }))
             .then(employeesArray => updateEmployeeManager(employeesArray,managersArray))
+        }
+
+        else if (answers.choice === 'Delete Employee') {
+            let employeesArray = [];
+            db.promise().query("SELECT CONCAT(first_name, ' ' , last_name) AS full_name FROM employees")
+            // db.promise().query(`SELECT first_name FROM employees`)
+            .then(([rows, fields]) => {
+                for (let i=0; i < rows.length; i++){
+                    employeesArray.push(rows[i].full_name);
+                }
+                return employeesArray;
+            })
+            .then(employeesArray => deleteEmployee(employeesArray));
         }
 
         else {
