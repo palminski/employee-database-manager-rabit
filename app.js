@@ -17,7 +17,7 @@ const displayEmployees = function() {
                 roles.title AS title,
                 roles.salary,
                 departments.name AS department,
-                employees.last_name AS manager
+                CONCAT(employees.first_name, ' ', employees.last_name) AS manager
                 FROM employees AS e
                 LEFT JOIN roles
                 ON e.role_id = roles.id
@@ -235,7 +235,7 @@ const prompUser = function(){
                         'Add Employee',
                         'Add Role',
                         'Add Department',
-                        'Update Employee',
+                        'Update Employee Role',
                         'Exit'] 
             }
         ]
@@ -292,7 +292,7 @@ const prompUser = function(){
             .then(rolesArray => addEmployee(rolesArray,managersArray));
         }
 
-        else if (answers.choice === 'Update Employee') {
+        else if (answers.choice === 'Update Employee Role') {
             let employeesArray = [];
             let rolesArray =[];
             db.promise().query("SELECT CONCAT(first_name, ' ' , last_name) AS full_name FROM employees")
