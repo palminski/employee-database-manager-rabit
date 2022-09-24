@@ -276,6 +276,54 @@ const deleteEmployee = function(employeesArray) {
     })
 };
 
+const deleteRole = function(rolesArray) {
+    inquirer.prompt(
+        [
+            {
+                name: 'role',
+                type: 'list',
+                message: 'Choose name of role to Delete',
+                choices: rolesArray
+            }
+        ]
+    )
+    .then(answer => {
+        const sql = `DELETE FROM roles WHERE title = ?`;
+        const params = [answer.role];
+        db.promise().query(sql, params)
+        .then( () => {
+            console.log('------------------------------');
+            console.log("Role Deleted!\n");
+            console.log('------------------------------');
+            prompUser();
+        })
+    })
+};
+
+const deleteDepartment = function(departmentsArray) {
+    inquirer.prompt(
+        [
+            {
+                name: 'department',
+                type: 'list',
+                message: 'Choose name of department to Delete',
+                choices: departmentsArray
+            }
+        ]
+    )
+    .then(answer => {
+        const sql = `DELETE FROM departments WHERE name = ?`;
+        const params = [answer.department];
+        db.promise().query(sql, params)
+        .then( () => {
+            console.log('------------------------------');
+            console.log("Department Deleted!\n");
+            console.log('------------------------------');
+            prompUser();
+        })
+    })
+};
+
 //<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 //PROMPT USER
 const prompUser = function(){
@@ -403,6 +451,32 @@ const prompUser = function(){
                 return employeesArray;
             })
             .then(employeesArray => deleteEmployee(employeesArray));
+        }
+
+        else if (answers.choice === 'Delete Role') {
+            let rolesArray = [];
+            db.promise().query("SELECT title FROM roles")
+            // db.promise().query(`SELECT first_name FROM employees`)
+            .then(([rows, fields]) => {
+                for (let i=0; i < rows.length; i++){
+                    rolesArray.push(rows[i].title);
+                }
+                return rolesArray;
+            })
+            .then(rolesArray => deleteRole(rolesArray));
+        }
+
+        else if (answers.choice === 'Delete Department') {
+            let departmentsArray = [];
+            db.promise().query("SELECT name FROM departments")
+            // db.promise().query(`SELECT first_name FROM employees`)
+            .then(([rows, fields]) => {
+                for (let i=0; i < rows.length; i++){
+                    departmentsArray.push(rows[i].name);
+                }
+                return departmentsArray;
+            })
+            .then(departmentsArray => deleteDepartment(departmentsArray));
         }
 
         else {
