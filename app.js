@@ -37,6 +37,79 @@ const displayEmployees = function() {
     .catch(console.log());
         
 };
+//Employee by Dept
+const viewEmployeesByManager = function (managersArray) {
+    inquirer.prompt(
+        [
+            {
+                name: 'manager',
+                type: "list",
+                message: "Which manager's employees would you like to view?",
+                choices: managersArray
+            }
+        ]
+    )
+    .then (answer => {
+        const sql = `SELECT e.id, e.first_name,e.last_name, 
+        roles.title AS title,
+        roles.salary,
+        departments.name AS department,
+        CONCAT(employees.first_name, ' ', employees.last_name) AS manager
+        FROM employees AS e 
+        LEFT JOIN roles
+        ON e.role_id = roles.id
+        LEFT JOIN departments
+        ON roles.department_id = departments.id
+        LEFT JOIN employees
+        On e.manager_id = employees.id
+        WHERE e.manager_id = (SELECT id FROM employees WHERE CONCAT(first_name, ' ', last_name) = ?)
+        `;
+        params = [answer.manager];
+        db.promise().query(sql,params)
+        .then( ([rows,fields]) => {
+        console.log('---EMPLOYEES------------------------------\n');
+        console.table(rows);
+    })
+    .then(prompUser)
+    })
+}
+
+const viewEmployeesByDepartment = function (departmentsArray) {
+    inquirer.prompt(
+        [
+            {
+                name: 'department',
+                type: "list",
+                message: "Which department's employees would you like to view?",
+                choices: departmentsArray
+            }
+        ]
+    )
+    .then (answer => {
+        const sql = `SELECT e.id, e.first_name,e.last_name, 
+        roles.title AS title,
+        roles.salary,
+        departments.name AS department,
+        CONCAT(employees.first_name, ' ', employees.last_name) AS manager
+        FROM employees AS e 
+        LEFT JOIN roles
+        ON e.role_id = roles.id
+        LEFT JOIN departments
+        ON roles.department_id = departments.id
+        LEFT JOIN employees
+        On e.manager_id = employees.id
+        WHERE departments.name = ?
+        `;
+        params = [answer.department];
+        db.promise().query(sql,params)
+        .then( ([rows,fields]) => {
+        console.log('---EMPLOYEES------------------------------\n');
+        console.table(rows);
+    })
+    .then(prompUser)
+    })
+}
+
 //ROLES
 const displayRoles = function() {
     const sql = `SELECT roles.id, roles.title, roles.salary,
@@ -47,7 +120,6 @@ const displayRoles = function() {
     db.promise().query(sql)
         .then(([rows, fields]) => {
             console.log('---ROLES----------------------------------\n');
-
             console.table(rows);
         })
         .then(prompUser)
@@ -334,6 +406,8 @@ const prompUser = function(){
                 type: "list",
                 message: "What would you like to do?\n",
                 choices: ['View Employees',
+                        "View Employees by Manager",
+                        "View Employees by Department",
                         "View Roles",
                         "View Departments",
                         'Add Employee',
@@ -353,6 +427,33 @@ const prompUser = function(){
         if (answers.choice === 'View Employees'){
             displayEmployees();
         }
+
+        else if (answers.choice === 'View Employees by Manager') {
+            let managersArray = [];
+
+            db.promise().query(`SELECT CONCAT(first_name, ' ' , last_name) AS full_name FROM employees`)
+            .then(([rows, fields]) => {
+                for (let i=0; i < rows.length; i++){
+                    managersArray.push(rows[i].full_name);
+                }
+                return managersArray;
+            })
+            .then(managersArray => viewEmployeesByManager(managersArray))
+        }
+
+        else if (answers.choice === 'View Employees by Department') {
+            let departmentsArray = [];
+
+            db.promise().query(`SELECT name FROM departments`)
+            .then(([rows, fields]) => {
+                for (let i=0; i < rows.length; i++){
+                    departmentsArray.push(rows[i].name);
+                }
+                return departmentsArray;
+            })
+            .then(departmentsArray => viewEmployeesByDepartment(departmentsArray))
+        }
+
         else if (answers.choice === 'View Roles'){
             displayRoles();
         }
