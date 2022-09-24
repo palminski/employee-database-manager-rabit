@@ -10,7 +10,9 @@ A video of the application in action can be seen [here](https://drive.google.com
 [Questions](#questions)
 
 ## Installation
-Clone code and run the npm i command from the terminal
+Clone code and run the npm i command from the terminal.
+Also run these commands in your SQL shell in the following order from root directory: source db/db.sql,source db/schema.sql,source db/seeds.sql.
+Default password for this application is 'password'. if your SQL password is different change the password in app.js
 
 ## Usage
 Select option from main menue and follow prompts to change and view data from the database
