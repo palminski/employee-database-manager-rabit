@@ -25,6 +25,7 @@ const displayEmployees = function() {
                 ON roles.department_id = departments.id
                 LEFT JOIN employees
                 On e.manager_id = employees.id
+                ORDER BY department
                 `;
 
 
@@ -63,6 +64,7 @@ const viewEmployeesByManager = function (managersArray) {
         LEFT JOIN employees
         On e.manager_id = employees.id
         WHERE e.manager_id = (SELECT id FROM employees WHERE CONCAT(first_name, ' ', last_name) = ?)
+        ORDER BY department
         `;
         params = [answer.manager];
         db.promise().query(sql,params)
@@ -99,6 +101,7 @@ const viewEmployeesByDepartment = function (departmentsArray) {
         LEFT JOIN employees
         On e.manager_id = employees.id
         WHERE departments.name = ?
+        
         `;
         params = [answer.department];
         db.promise().query(sql,params)
@@ -116,7 +119,9 @@ const displayRoles = function() {
                 departments.name AS department
                 FROM roles 
                 LEFT JOIN departments
-                ON roles.department_id = departments.id`;
+                ON roles.department_id = departments.id
+                ORDER BY department`
+                ;
     db.promise().query(sql)
         .then(([rows, fields]) => {
             console.log('---ROLES----------------------------------\n');
@@ -136,6 +141,46 @@ const displayDepartments = function () {
         .then(prompUser)
         .catch(console.log());
 };
+
+const viewDepartmentsBudget = function(departmentsArray) {
+    inquirer.prompt(
+        [
+            {
+                name: 'department',
+                type: "list",
+                message: "Which department's budget would you like to view?",
+                choices: departmentsArray
+            }
+        ]
+    )
+    .then(answer => {
+        const sql = `SELECT salary FROM roles WHERE (department_id = (SELECT id FROM departments WHERE name = ?))`
+        const params = [answer.department];
+        db.promise().query(sql,params)
+        .then(([rows,fields]) => {
+            console.log(rows);
+            if (rows.length === 1)
+            {
+                console.log('------------------------------');
+                console.log('There are no roles assigned to this department');
+                console.log('------------------------------');
+            }
+            else
+            {
+                let totalValue = 0;
+                for (let i = 0; i < rows.length; i++)
+                {
+                    totalValue += parseFloat(rows[i].salary);
+                }
+                console.log('------------------------------');
+                console.log(`Department's Budget is ${totalValue}!`);
+                console.log('------------------------------');
+            }
+        })
+        .then(prompUser)
+
+    })
+}
 
 //FUNCTIONS TO ADD DATA
 //<><><><><><><><><><><><><>
@@ -430,6 +475,7 @@ const prompUser = function(){
                         "View Employees by Department",
                         "View Roles",
                         "View Departments",
+                        "View Department's Budget",
                         'Add Employee',
                         'Add Role',
                         'Add Department',
@@ -480,6 +526,21 @@ const prompUser = function(){
         else if (answers.choice === 'View Departments'){
             displayDepartments();
         }  
+
+        else if (answers.choice === "View Department's Budget"){
+            let departmentsArray = [];
+
+            db.promise().query(`SELECT name FROM departments`)
+            .then(([rows, fields]) => {
+                
+                for (let i=0; i < rows.length; i++){
+                    departmentsArray.push(rows[i].name);
+                }
+                return departmentsArray;
+            })
+            .then(departmentsArray => viewDepartmentsBudget(departmentsArray));
+        }
+
         else if (answers.choice === 'Add Department'){
             addDepartment();
         }  
@@ -599,7 +660,6 @@ const prompUser = function(){
             })
             .then(departmentsArray => deleteDepartment(departmentsArray));
         }
-
         else {
             console.log("Bye!");
             process.exit();
