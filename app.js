@@ -279,6 +279,9 @@ const updateEmployeeRole = function(employeesArray,rolesArray){
         ]
     )
     .then(answers => {
+
+
+
         const sql = `UPDATE employees SET role_id = (SELECT id FROM roles WHERE title = ?) WHERE CONCAT(first_name, ' ', last_name) = ?`;
         const params = [answers.role, answers.employee];
         db.promise().query(sql, params)
@@ -291,7 +294,7 @@ const updateEmployeeRole = function(employeesArray,rolesArray){
     })
 }
 
-//UPDATE MANAGER WIP
+//UPDATE MANAGER
 const updateEmployeeManager = function(employeesArray,managersArray){
     inquirer.prompt(
         [
@@ -310,15 +313,32 @@ const updateEmployeeManager = function(employeesArray,managersArray){
         ]
     )
     .then(answers => {
-        const sql = `UPDATE employees SET manager_id = (SELECT id FROM employees AS e WHERE CONCAT(first_name, ' ', last_name) = ?) WHERE CONCAT(first_name, ' ', last_name) = ?`;
-        const params = [answers.manager, answers.employee];
-        db.promise().query(sql, params)
-        .then( () => {
-            console.log('------------------------------');
-            console.log("Employee Manager Updated!\n");
-            console.log('------------------------------');
-            prompUser();
-        })
+
+        if (answers.manager === answers.employee) {
+            answers.manager === null;
+            const sql = `UPDATE employees SET manager_id = null WHERE CONCAT(first_name, ' ', last_name) = ?`;
+            const params = [answers.manager, answers.employee];
+            db.promise().query(sql, params)
+                .then(() => {
+                    console.log('------------------------------');
+                    console.log("Employee Manager Updated to null!\n(can't be own manager)\n");
+                    console.log('------------------------------');
+                    prompUser();
+                })
+        }
+        else {  // DOUBLE CHECK HOW THIS DB QUERY WORKS
+            const sql = `UPDATE employees SET manager_id = (SELECT id from(SELECT id from employees WHERE CONCAT(first_name, ' ', last_name) = ?)as e) WHERE CONCAT(first_name, ' ', last_name) = ?`;
+            const params = [answers.manager, answers.employee];
+            db.promise().query(sql, params)
+                .then(() => {
+                    console.log('------------------------------');
+                    console.log("Employee Manager Updated!\n");
+                    console.log('------------------------------');
+                    prompUser();
+                })
+        }
+
+        
     })
 }
 
@@ -414,7 +434,7 @@ const prompUser = function(){
                         'Add Role',
                         'Add Department',
                         'Update Employee Role',
-                        // 'Update Employee Manager',
+                        'Update Employee Manager',
                         'Delete Employee',
                         'Delete Role',
                         'Delete Department',
